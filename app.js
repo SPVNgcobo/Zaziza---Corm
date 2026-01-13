@@ -1,6 +1,6 @@
 const { useState, useEffect, useMemo } = React;
 
-// --- MOCK DATA ---
+// --- 1. DATA (Embedded for stability) ---
 const PRODUCTS = [
     { id: 1, name: "Silk Evening Dress", category: "women", price: 459, image: "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=800&q=80", desc: "Crafted from 100% mulberry silk, this evening gown features a bias cut that drapes effortlessly." },
     { id: 2, name: "Obsidian Leather Jacket", category: "men", price: 299, image: "https://images.unsplash.com/photo-1551028919-383718bccf3b?auto=format&fit=crop&w=800&q=80", desc: "Full-grain Italian leather with gunmetal hardware. A timeless staple for the modern rebel." },
@@ -14,7 +14,7 @@ const PRODUCTS = [
 
 const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
-// --- ICONS (SVG) ---
+// --- 2. ICONS (SVG for sharpness) ---
 const Icon = ({ name }) => {
     if (name === 'cart') return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>;
     if (name === 'search') return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
@@ -22,7 +22,7 @@ const Icon = ({ name }) => {
     return null;
 };
 
-// --- COMPONENTS ---
+// --- 3. UI COMPONENTS ---
 
 const Navbar = ({ cartCount, onCartClick, onNav }) => (
     <nav>
@@ -87,17 +87,40 @@ const Footer = () => (
     </footer>
 );
 
-// --- VIEWS ---
+// --- 4. VIEWS ---
 
-const HomeView = ({ products, onProductClick }) => (
+const HomeView = ({ products, onProductClick, onNav }) => (
     <>
         <section className="hero">
             <div className="hero-content">
                 <h1>REDEFINE YOUR STYLE</h1>
                 <p>Luxury meets street. The 2026 Collection is here.</p>
-                <button className="btn btn-primary" onClick={() => document.getElementById('shop').scrollIntoView()}>SHOP NOW</button>
+                <button className="btn btn-primary" onClick={() => onNav('shop')}>SHOP NOW</button>
             </div>
         </section>
+        
+        {/* Features / About Section */}
+        <section id="about" className="products" style={{paddingBottom: '2rem'}}>
+            <div className="section-header"><h2 className="section-title">The Standard</h2></div>
+            <div className="products-grid" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))'}}>
+                <div className="product-card" style={{padding:'2rem', textAlign:'center', alignItems:'center'}}>
+                    <div style={{fontSize:'3rem', marginBottom:'1rem'}}>🚚</div>
+                    <h3>Global Shipping</h3>
+                    <p style={{color:'var(--text-muted)'}}>Complimentary shipping on orders over $200.</p>
+                </div>
+                <div className="product-card" style={{padding:'2rem', textAlign:'center', alignItems:'center'}}>
+                    <div style={{fontSize:'3rem', marginBottom:'1rem'}}>🔒</div>
+                    <h3>Secure Payment</h3>
+                    <p style={{color:'var(--text-muted)'}}>256-bit encryption for all transactions.</p>
+                </div>
+                <div className="product-card" style={{padding:'2rem', textAlign:'center', alignItems:'center'}}>
+                    <div style={{fontSize:'3rem', marginBottom:'1rem'}}>💎</div>
+                    <h3>Premium Quality</h3>
+                    <p style={{color:'var(--text-muted)'}}>Hand-selected materials and craftsmanship.</p>
+                </div>
+            </div>
+        </section>
+
         <section id="shop" className="products">
             <div className="section-header"><h2 className="section-title">Latest Drops</h2></div>
             <div className="products-grid">
@@ -114,6 +137,24 @@ const HomeView = ({ products, onProductClick }) => (
                         </div>
                     </div>
                 ))}
+            </div>
+        </section>
+
+        {/* Contact Section */}
+        <section id="contact" className="products">
+            <div className="section-header"><h2 className="section-title">Contact Us</h2></div>
+            <div className="checkout-grid" style={{minHeight:'auto'}}>
+                <div className="checkout-main" style={{border:'1px solid var(--glass-border)', borderRadius:'20px'}}>
+                    <div className="form-group">
+                        <label className="form-label">Email</label>
+                        <input className="form-input" placeholder="hello@zaziza.com" />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Message</label>
+                        <input className="form-input" style={{height:'100px'}} placeholder="How can we help?" />
+                    </div>
+                    <button className="btn btn-primary full-width">SEND MESSAGE</button>
+                </div>
             </div>
         </section>
     </>
@@ -133,6 +174,7 @@ const ProductDetailView = ({ product, onAddToCart, onBack }) => (
     </div>
 );
 
+// --- 5. CHECKOUT LOGIC (No Alerts) ---
 const CheckoutView = ({ cart, total, onCancel, onSuccess }) => {
     const [form, setForm] = useState({ email: '', name: '', address: '', card: '', expiry: '', cvc: '' });
     const [errors, setErrors] = useState({});
@@ -226,7 +268,7 @@ const CheckoutView = ({ cart, total, onCancel, onSuccess }) => {
     );
 };
 
-// --- APP CONTROLLER ---
+// --- 6. APP CONTROLLER ---
 
 const App = () => {
     const [view, setView] = useState('home'); // home, product, checkout
@@ -257,18 +299,28 @@ const App = () => {
 
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
+    const handleNav = (target) => {
+        setView('home');
+        // Small timeout to allow View to render before scrolling
+        setTimeout(() => {
+            const el = document.getElementById(target);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+            else window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 50);
+    };
+
     return (
         <>
             {view !== 'checkout' && (
                 <Navbar 
                     cartCount={cart.reduce((sum, i) => sum + i.quantity, 0)} 
                     onCartClick={() => setIsCartOpen(true)} 
-                    onNav={(v) => { setView('home'); setTimeout(() => document.getElementById(v === 'home' ? 'root' : v)?.scrollIntoView(), 100); }} 
+                    onNav={handleNav} 
                 />
             )}
 
             <main>
-                {view === 'home' && <HomeView products={PRODUCTS} onProductClick={(p) => { setActiveProduct(p); setView('product'); }} />}
+                {view === 'home' && <HomeView products={PRODUCTS} onProductClick={(p) => { setActiveProduct(p); setView('product'); }} onNav={handleNav} />}
                 {view === 'product' && <ProductDetailView product={activeProduct} onAddToCart={addToCart} onBack={() => setView('home')} />}
                 {view === 'checkout' && <CheckoutView cart={cart} total={total} onCancel={() => setView('home')} onSuccess={() => { setCart([]); setView('home'); alert("Order Placed Successfully!"); }} />}
             </main>
