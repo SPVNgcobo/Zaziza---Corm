@@ -1,6 +1,6 @@
 const { useState, useEffect, useMemo, createContext, useContext, useRef } = React;
 
-// --- DATA LAYER ---
+// --- DATA LAYER (Embedded for stability) ---
 const PRODUCTS_DATA = [
     { id: 1, name: "Silk Evening Dress", category: "women", price: 459, originalPrice: 599, rating: 4.8, description: "Elegant flowing silk dress in midnight noir.", badge: "NEW", image: "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=800&q=80" },
     { id: 2, name: "Obsidian Leather Jacket", category: "men", price: 299, originalPrice: 399, rating: 4.9, description: "Classic leather bomber with matte finish.", badge: "SALE", image: "https://images.unsplash.com/photo-1551028919-383718bccf3b?auto=format&fit=crop&w=800&q=80" },
@@ -15,7 +15,7 @@ const PRODUCTS_DATA = [
 // --- UTILS ---
 const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
-// --- HOOKS (Principal Level Logic) ---
+// --- HOOKS ---
 function useScrollReveal() {
     useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
@@ -45,39 +45,176 @@ function usePersistedState(key, defaultValue) {
 // --- COMPONENTS ---
 
 // 1. Navigation
-const Navbar = ({ cartCount, openCart, toggleWishlist, openSearch }) => (
-    <nav id="navbar">
-        <div className="nav-content">
-            <div className="logo" onClick={() => window.scrollTo({top:0, behavior:'smooth'})}>ZAZIZA</div>
-            <ul className="nav-links">
-                {['SHOP', 'NEW IN', 'ABOUT', 'CONTACT'].map(item => (
-                    <li key={item}><a href={`#${item.toLowerCase().replace(' ', '')}`}>{item}</a></li>
-                ))}
-            </ul>
-            <div className="nav-icons">
-                <button className="nav-icon-btn" onClick={openSearch}>🔍</button>
-                <button className="nav-icon-btn" onClick={toggleWishlist}>❤️</button>
-                <button className="nav-icon-btn" onClick={openCart} style={{position: 'relative'}}>
-                    🛒
-                    <span className="cart-badge" key={cartCount} style={{animation: 'pulse 0.5s ease'}}>{cartCount}</span>
-                </button>
-                <button className="nav-icon-btn">👤</button>
-                <button className="mobile-menu-btn">☰</button>
+const Navbar = ({ cartCount, openCart, toggleWishlist, openSearch, user, openAuth, logout }) => {
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    return (
+        <nav id="navbar">
+            <div className="nav-content">
+                <div className="logo" onClick={() => window.scrollTo({top:0, behavior:'smooth'})}>ZAZIZA</div>
+                <ul className="nav-links">
+                    {['SHOP', 'NEW IN', 'ABOUT', 'CONTACT'].map(item => (
+                        <li key={item}><a href={`#${item.toLowerCase().replace(' ', '')}`}>{item}</a></li>
+                    ))}
+                </ul>
+                <div className="nav-icons">
+                    <button className="nav-icon-btn" onClick={openSearch}>🔍</button>
+                    <button className="nav-icon-btn" onClick={toggleWishlist}>❤️</button>
+                    <button className="nav-icon-btn" onClick={openCart} style={{position: 'relative'}}>
+                        🛒
+                        <span className="cart-badge" key={cartCount} style={{animation: 'pulse 0.5s ease'}}>{cartCount}</span>
+                    </button>
+                    
+                    {/* Auth User Logic */}
+                    <div style={{position: 'relative'}} onMouseLeave={() => setMenuOpen(false)}>
+                        {user ? (
+                            <div className="user-avatar" onClick={() => setMenuOpen(!menuOpen)}>
+                                {user.name.charAt(0)}{user.name.split(' ')[1] ? user.name.split(' ')[1].charAt(0) : ''}
+                            </div>
+                        ) : (
+                            <button className="nav-icon-btn" onClick={openAuth}>👤</button>
+                        )}
+                        
+                        <div className={`user-menu ${menuOpen ? 'active' : ''}`}>
+                            <button className="user-menu-item">My Orders</button>
+                            <button className="user-menu-item">Account Settings</button>
+                            <button className="user-menu-item" onClick={() => { logout(); setMenuOpen(false); }} style={{color: 'var(--accent)'}}>Sign Out</button>
+                        </div>
+                    </div>
+
+                    <button className="mobile-menu-btn">☰</button>
+                </div>
+            </div>
+        </nav>
+    );
+};
+
+// 2. Auth Modal
+const AuthModal = ({ isOpen, onClose, onLogin }) => {
+    const [view, setView] = useState('login');
+    const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({ email: '', password: '', name: '', confirmPassword: '' });
+    const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
+
+    useEffect(() => {
+        if(isOpen) {
+            setView('login');
+            setError('');
+            setSuccessMsg('');
+            setFormData({ email: '', password: '', name: '', confirmPassword: '' });
+        }
+    }, [isOpen]);
+
+    const handleInput = (e) => setFormData({...formData, [e.target.id]: e.target.value});
+
+    const handleAuth = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+        await new Promise(r => setTimeout(r, 1500)); // Simulate API
+
+        if (view === 'login') {
+            if (formData.email && formData.password) {
+                onLogin({ name: "Demo User", email: formData.email });
+                onClose();
+            } else {
+                setError("Invalid credentials.");
+            }
+        } else if (view === 'signup') {
+            if (formData.password !== formData.confirmPassword) {
+                setError("Passwords do not match.");
+            } else if (formData.name && formData.email) {
+                onLogin({ name: formData.name, email: formData.email });
+                onClose();
+            } else {
+                setError("Please fill in all fields.");
+            }
+        } else if (view === 'forgot') {
+            setSuccessMsg(`Reset link sent to ${formData.email}`);
+            setTimeout(() => { setView('login'); setSuccessMsg(''); }, 3000);
+        }
+        setLoading(false);
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className={`modal active`} onClick={(e) => e.target.classList.contains('modal') && onClose()}>
+            <div className="modal-content" style={{maxWidth: '400px'}}>
+                <button className="modal-close" onClick={onClose}>×</button>
+                <div className="auth-header">
+                    <h2>
+                        {view === 'login' && 'Welcome Back'}
+                        {view === 'signup' && 'Join Zaziza'}
+                        {view === 'forgot' && 'Reset Password'}
+                    </h2>
+                    <p style={{color: 'var(--text-muted)'}}>
+                        {view === 'login' && 'Sign in to access your account'}
+                        {view === 'signup' && 'Create an account to start shopping'}
+                        {view === 'forgot' && 'Enter your email to receive a link'}
+                    </p>
+                </div>
+
+                {error && <div style={{color: 'var(--accent)', marginBottom: '1rem', textAlign: 'center', fontWeight: '600'}}>{error}</div>}
+                {successMsg && <div style={{color: 'var(--primary)', marginBottom: '1rem', textAlign: 'center', fontWeight: '600'}}>{successMsg}</div>}
+
+                <form onSubmit={handleAuth}>
+                    {view === 'signup' && (
+                        <div className="form-group floating-label">
+                            <input type="text" id="name" className="form-input" placeholder=" " value={formData.name} onChange={handleInput} required />
+                            <label>Full Name</label>
+                        </div>
+                    )}
+                    <div className="form-group floating-label">
+                        <input type="email" id="email" className="form-input" placeholder=" " value={formData.email} onChange={handleInput} required />
+                        <label>Email Address</label>
+                    </div>
+                    {view !== 'forgot' && (
+                        <div className="form-group floating-label">
+                            <input type="password" id="password" className="form-input" placeholder=" " value={formData.password} onChange={handleInput} required />
+                            <label>Password</label>
+                        </div>
+                    )}
+                    {view === 'signup' && (
+                        <div className="form-group floating-label">
+                            <input type="password" id="confirmPassword" className="form-input" placeholder=" " value={formData.confirmPassword} onChange={handleInput} required />
+                            <label>Confirm Password</label>
+                        </div>
+                    )}
+                    {view === 'login' && (
+                        <div style={{textAlign: 'right', marginBottom: '1.5rem'}}>
+                            <button type="button" className="auth-link" style={{fontSize: '0.85rem'}} onClick={() => setView('forgot')}>Forgot Password?</button>
+                        </div>
+                    )}
+                    <button type="submit" className="btn btn-primary full-width" disabled={loading}>
+                        {loading ? 'Processing...' : (view === 'login' ? 'Sign In' : view === 'signup' ? 'Create Account' : 'Send Link')}
+                    </button>
+                </form>
+
+                <div className="auth-footer">
+                    {view === 'login' && <p>Don't have an account? <button className="auth-link" onClick={() => setView('signup')}>Sign Up</button></p>}
+                    {view === 'signup' && <p>Already have an account? <button className="auth-link" onClick={() => setView('login')}>Sign In</button></p>}
+                    {view === 'forgot' && <button className="auth-link" onClick={() => setView('login')}>Back to Login</button>}
+                </div>
             </div>
         </div>
-    </nav>
-);
+    );
+};
 
-// 2. Checkout Overlay (The Complex Part)
-const CheckoutOverlay = ({ isOpen, onClose, cart, clearCart }) => {
+// 3. Checkout Overlay
+const CheckoutOverlay = ({ isOpen, onClose, cart, clearCart, user }) => {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
-        email: '', firstName: '', lastName: '', address: '', city: '', postal: '',
+        email: user?.email || '', firstName: user?.name?.split(' ')[0] || '', lastName: user?.name?.split(' ')[1] || '', address: '', city: '', postal: '',
         shipping: 'standard', cardNumber: '', expiry: '', cvc: '', cardName: ''
     });
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // Reset checkout when closed/opened
+    useEffect(() => {
+        if(user) setFormData(prev => ({...prev, email: user.email, firstName: user.name.split(' ')[0], lastName: user.name.split(' ')[1] || '' }));
+    }, [user]);
+
     useEffect(() => { if(isOpen) setStep(1); }, [isOpen]);
 
     const shippingCost = formData.shipping === 'express' ? 25 : 0;
@@ -87,37 +224,21 @@ const CheckoutOverlay = ({ isOpen, onClose, cart, clearCart }) => {
     const handleInput = (e) => {
         const { id, value } = e.target;
         let formatted = value;
-        // Input Masking Logic
         if (id === 'cardNumber') formatted = value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
         if (id === 'expiry') formatted = value.replace(/\D/g, '').replace(/^(\d{2})(\d)/, '$1/$2');
         setFormData(prev => ({ ...prev, [id]: formatted }));
     };
 
     const validateStep = (currentStep) => {
-        const requiredFields = {
-            1: ['email', 'firstName', 'lastName', 'address', 'city', 'postal'],
-            2: [], // Radio button always has value
-            3: ['cardNumber', 'expiry', 'cvc', 'cardName']
-        };
-        const fields = requiredFields[currentStep];
-        const isValid = fields.every(field => formData[field] && formData[field].trim() !== '');
-        
-        if (!isValid) {
-            // Shake animation logic would go here via ref
-            alert("Please fill in all fields."); // Simple fallback for demo
-            return false;
-        }
-        return true;
+        const requiredFields = { 1: ['email', 'firstName', 'lastName', 'address', 'city', 'postal'], 2: [], 3: ['cardNumber', 'expiry', 'cvc', 'cardName'] };
+        return requiredFields[currentStep].every(field => formData[field] && formData[field].trim() !== '');
     };
 
-    const nextStep = () => {
-        if (validateStep(step)) setStep(s => s + 1);
-    };
+    const nextStep = () => { if (validateStep(step)) setStep(s => s + 1); else alert("Please fill in all fields."); };
 
     const processPayment = async () => {
         if (!validateStep(3)) return;
         setIsProcessing(true);
-        // Simulate API
         await new Promise(r => setTimeout(r, 2000));
         clearCart();
         setIsProcessing(false);
@@ -134,20 +255,14 @@ const CheckoutOverlay = ({ isOpen, onClose, cart, clearCart }) => {
                         <div className="logo">ZAZIZA</div>
                         <button className="close-checkout" onClick={onClose}>Cancel Payment</button>
                     </div>
-
-                    {/* Progress Bar */}
                     <div className="checkout-progress">
                         {[1, 2, 3].map(s => (
                             <React.Fragment key={s}>
-                                <div className={`step ${step >= s ? 'active' : ''}`}>
-                                    <span>{s}</span> {s === 1 ? 'Info' : s === 2 ? 'Shipping' : 'Payment'}
-                                </div>
+                                <div className={`step ${step >= s ? 'active' : ''}`}><span>{s}</span> {s === 1 ? 'Info' : s === 2 ? 'Shipping' : 'Payment'}</div>
                                 {s < 3 && <div className="step-line"></div>}
                             </React.Fragment>
                         ))}
                     </div>
-
-                    {/* Step 1: Info */}
                     {step === 1 && (
                         <div className="checkout-step active">
                             <h2>Contact Info</h2>
@@ -165,26 +280,14 @@ const CheckoutOverlay = ({ isOpen, onClose, cart, clearCart }) => {
                                     <label>Last Name</label>
                                 </div>
                             </div>
-                            {/* Address fields simplified for brevity but principal implementation would include all */}
-                            <div className="form-group floating-label">
-                                <input type="text" id="address" className="form-input" placeholder=" " value={formData.address} onChange={handleInput} />
-                                <label>Address</label>
-                            </div>
+                            <div className="form-group floating-label"><input type="text" id="address" className="form-input" placeholder=" " value={formData.address} onChange={handleInput} /><label>Address</label></div>
                              <div className="form-row">
-                                <div className="form-group floating-label half">
-                                    <input type="text" id="city" className="form-input" placeholder=" " value={formData.city} onChange={handleInput} />
-                                    <label>City</label>
-                                </div>
-                                <div className="form-group floating-label half">
-                                    <input type="text" id="postal" className="form-input" placeholder=" " value={formData.postal} onChange={handleInput} />
-                                    <label>Postal Code</label>
-                                </div>
+                                <div className="form-group floating-label half"><input type="text" id="city" className="form-input" placeholder=" " value={formData.city} onChange={handleInput} /><label>City</label></div>
+                                <div className="form-group floating-label half"><input type="text" id="postal" className="form-input" placeholder=" " value={formData.postal} onChange={handleInput} /><label>Postal Code</label></div>
                             </div>
                             <button className="btn btn-primary full-width" onClick={nextStep}>Continue to Shipping</button>
                         </div>
                     )}
-
-                    {/* Step 2: Shipping */}
                     {step === 2 && (
                         <div className="checkout-step active">
                             <h2>Shipping Method</h2>
@@ -206,8 +309,6 @@ const CheckoutOverlay = ({ isOpen, onClose, cart, clearCart }) => {
                             </div>
                         </div>
                     )}
-
-                    {/* Step 3: Payment */}
                     {step === 3 && (
                         <div className="checkout-step active">
                             <h2>Payment</h2>
@@ -215,39 +316,20 @@ const CheckoutOverlay = ({ isOpen, onClose, cart, clearCart }) => {
                                 <div className="card-chip"></div>
                                 <div className="card-logo">{formData.cardNumber.startsWith('4') ? 'VISA' : 'CARD'}</div>
                                 <div className="card-number-display">{formData.cardNumber || '•••• •••• •••• ••••'}</div>
-                                <div className="card-details-row">
-                                    <div>{formData.cardName || 'YOUR NAME'}</div>
-                                    <div>{formData.expiry || 'MM/YY'}</div>
-                                </div>
+                                <div className="card-details-row"><div>{formData.cardName || 'YOUR NAME'}</div><div>{formData.expiry || 'MM/YY'}</div></div>
                             </div>
-                            <div className="form-group floating-label">
-                                <input type="text" id="cardNumber" maxLength="19" className="form-input" placeholder=" " value={formData.cardNumber} onChange={handleInput} />
-                                <label>Card Number</label>
-                            </div>
+                            <div className="form-group floating-label"><input type="text" id="cardNumber" maxLength="19" className="form-input" placeholder=" " value={formData.cardNumber} onChange={handleInput} /><label>Card Number</label></div>
                             <div className="form-row">
-                                <div className="form-group floating-label half">
-                                    <input type="text" id="expiry" maxLength="5" className="form-input" placeholder=" " value={formData.expiry} onChange={handleInput} />
-                                    <label>Expiry</label>
-                                </div>
-                                <div className="form-group floating-label half">
-                                    <input type="text" id="cvc" maxLength="4" className="form-input" placeholder=" " value={formData.cvc} onChange={handleInput} />
-                                    <label>CVC</label>
-                                </div>
+                                <div className="form-group floating-label half"><input type="text" id="expiry" maxLength="5" className="form-input" placeholder=" " value={formData.expiry} onChange={handleInput} /><label>Expiry</label></div>
+                                <div className="form-group floating-label half"><input type="text" id="cvc" maxLength="4" className="form-input" placeholder=" " value={formData.cvc} onChange={handleInput} /><label>CVC</label></div>
                             </div>
-                            <div className="form-group floating-label">
-                                <input type="text" id="cardName" className="form-input" placeholder=" " value={formData.cardName} onChange={handleInput} />
-                                <label>Name on Card</label>
-                            </div>
+                            <div className="form-group floating-label"><input type="text" id="cardName" className="form-input" placeholder=" " value={formData.cardName} onChange={handleInput} /><label>Name on Card</label></div>
                             <div className="step-actions">
                                 <button className="btn btn-secondary" onClick={() => setStep(2)}>Back</button>
-                                <button className="btn btn-primary" disabled={isProcessing} onClick={processPayment}>
-                                    {isProcessing ? 'Processing...' : `Pay ${formatCurrency(total)}`}
-                                </button>
+                                <button className="btn btn-primary" disabled={isProcessing} onClick={processPayment}>{isProcessing ? 'Processing...' : `Pay ${formatCurrency(total)}`}</button>
                             </div>
                         </div>
                     )}
-
-                    {/* Step Success */}
                     {step === 'success' && (
                         <div className="checkout-step active" style={{textAlign: 'center'}}>
                             <div className="success-animation"><div className="checkmark-circle"><div className="checkmark draw"></div></div></div>
@@ -257,17 +339,12 @@ const CheckoutOverlay = ({ isOpen, onClose, cart, clearCart }) => {
                         </div>
                     )}
                 </div>
-
-                {/* Sidebar Summary */}
                 <div className="checkout-sidebar">
                     <h2>Summary</h2>
                     {cart.map(item => (
                         <div key={item.id} className="checkout-item">
                             <img src={item.image} className="checkout-item-img" />
-                            <div className="checkout-item-details">
-                                <div className="checkout-item-name">{item.name}</div>
-                                <div className="checkout-item-qty">Qty: {item.quantity}</div>
-                            </div>
+                            <div className="checkout-item-details"><div className="checkout-item-name">{item.name}</div><div className="checkout-item-qty">Qty: {item.quantity}</div></div>
                             <div className="checkout-item-price">{formatCurrency(item.price * item.quantity)}</div>
                         </div>
                     ))}
@@ -282,21 +359,19 @@ const CheckoutOverlay = ({ isOpen, onClose, cart, clearCart }) => {
     );
 };
 
-// 3. Main App Container
+// 4. Main App Container
 const App = () => {
     useScrollReveal();
     const [cart, setCart] = usePersistedState('zaziza_cart', []);
     const [wishlist, setWishlist] = usePersistedState('zaziza_wishlist', []);
+    const [user, setUser] = usePersistedState('zaziza_user', null);
     const [filter, setFilter] = useState('all');
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+    const [isAuthOpen, setIsAuthOpen] = useState(false);
     const [notification, setNotification] = useState(null);
 
-    // -- ACTIONS --
-    const notify = (msg) => {
-        setNotification(msg);
-        setTimeout(() => setNotification(null), 3000);
-    };
+    const notify = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
 
     const addToCart = (product) => {
         setCart(prev => {
@@ -315,7 +390,9 @@ const App = () => {
         notify(isWished ? "Removed from wishlist" : "Added to wishlist");
     };
 
-    // -- RENDER HELPERS --
+    const handleLogin = (userData) => { setUser(userData); notify(`Welcome back, ${userData.name}!`); };
+    const handleLogout = () => { setUser(null); notify("Signed out successfully"); };
+
     const filteredProducts = useMemo(() => {
         if (filter === 'all') return PRODUCTS_DATA;
         return PRODUCTS_DATA.filter(p => p.category === filter || p.badge.toLowerCase() === filter);
@@ -331,6 +408,9 @@ const App = () => {
                 openCart={() => setIsCartOpen(true)} 
                 toggleWishlist={() => notify(`Wishlist has ${wishlist.length} items`)}
                 openSearch={() => notify("Search feature active")}
+                user={user}
+                openAuth={() => setIsAuthOpen(true)}
+                logout={handleLogout}
             />
 
             <section className="hero">
@@ -387,9 +467,58 @@ const App = () => {
                 </div>
             </section>
             
-            {/* Footer Placeholder for brevity */}
+            {/* --- PROFESSIONAL FOOTER UPGRADE --- */}
             <footer>
-                <div className="footer-bottom"><p>© 2026 Zaziza. Principal Engineer Build.</p></div>
+                <div className="footer-content">
+                    <div className="footer-section">
+                        <h3>ZAZIZA</h3>
+                        <p style={{color: 'var(--text-muted)', lineHeight: 1.8, fontSize: '0.95rem'}}>
+                            Redefining modern fashion with curated pieces that blend contemporary aesthetics with timeless elegance. Designed for the bold.
+                        </p>
+                        <div className="social-icons">
+                            <div className="social-icon">📘</div>
+                            <div className="social-icon">📷</div>
+                            <div className="social-icon">🐦</div>
+                            <div className="social-icon">📌</div>
+                        </div>
+                    </div>
+                    <div className="footer-section">
+                        <h3>Shop</h3>
+                        <ul className="footer-links">
+                            <li><a href="#">New Arrivals</a></li>
+                            <li><a href="#">Best Sellers</a></li>
+                            <li><a href="#">Accessories</a></li>
+                            <li><a href="#">Sale</a></li>
+                        </ul>
+                    </div>
+                    <div className="footer-section">
+                        <h3>Support</h3>
+                        <ul className="footer-links">
+                            <li><a href="#">Help Center</a></li>
+                            <li><a href="#">Shipping & Returns</a></li>
+                            <li><a href="#">Size Guide</a></li>
+                            <li><a href="#">Contact Us</a></li>
+                        </ul>
+                    </div>
+                    <div className="footer-section">
+                        <h3>Legal</h3>
+                        <ul className="footer-links">
+                            <li><a href="#">Privacy Policy</a></li>
+                            <li><a href="#">Terms of Service</a></li>
+                            <li><a href="#">Cookie Policy</a></li>
+                            <li><a href="#">Sustainability</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div className="footer-bottom">
+                    <p>&copy; 2026 Zaziza. All rights reserved.</p>
+                    <div className="payment-methods">
+                        <div className="payment-icon">💳</div>
+                        <div className="payment-icon">🅿️</div>
+                        <div className="payment-icon">Ⓜ️</div>
+                        <div className="payment-icon">🅰️</div>
+                    </div>
+                </div>
             </footer>
 
             {/* Cart Modal */}
@@ -416,22 +545,20 @@ const App = () => {
                 </div>
             </div>
 
-            {/* Checkout Overlay */}
+            <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onLogin={handleLogin} />
+            
             <CheckoutOverlay 
                 isOpen={isCheckoutOpen} 
                 onClose={() => setIsCheckoutOpen(false)} 
                 cart={cart} 
-                clearCart={() => setCart([])} 
+                clearCart={() => setCart([])}
+                user={user}
             />
 
-            {/* Notification Toast */}
-            <div className={`notification ${notification ? 'active' : ''}`}>
-                <span>{notification}</span>
-            </div>
+            <div className={`notification ${notification ? 'active' : ''}`}><span>{notification}</span></div>
         </React.Fragment>
     );
 };
 
-// --- BOOTSTRAP ---
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
