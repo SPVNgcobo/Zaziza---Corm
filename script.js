@@ -1,6 +1,11 @@
 let products = [];
 let cart = [];
 let wishlist = new Set();
+let checkoutState = {
+    step: 1,
+    shippingCost: 0,
+    formData: {}
+};
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,179 +14,115 @@ document.addEventListener('DOMContentLoaded', () => {
     setupScrollReveal();
 });
 
-// Load Products from JSON (Simulating Nexus API)
+// Load Products from JSON
 async function loadProducts() {
     try {
         const response = await fetch('products.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         products = await response.json();
         renderProducts();
     } catch (e) {
-        console.error("Could not load products. Ensure you are running on a local server.", e);
-        document.getElementById('productsGrid').innerHTML = `
-            <div style="text-align:center; padding: 2rem; color: var(--text-muted);">
-                <p>⚠️ Unable to load product data.</p>
-                <p style="font-size: 0.9rem">Please open this folder with a local server (e.g., Live Server in VS Code) to allow JSON fetching.</p>
-            </div>
-        `;
+        console.error("Could not load products.", e);
+        document.getElementById('productsGrid').innerHTML = `<p style="text-align:center; padding: 2rem;">⚠️ Unable to load data.</p>`;
     }
 }
 
-// Data Persistence (LocalStorage)
+// Data Persistence
 function loadUserData() {
     const savedCart = localStorage.getItem('zaziza_cart');
     const savedWishlist = localStorage.getItem('zaziza_wishlist');
-
-    if (savedCart) {
-        cart = JSON.parse(savedCart);
-        updateCartUI();
-    }
-
-    if (savedWishlist) {
-        // Convert array back to Set
-        wishlist = new Set(JSON.parse(savedWishlist));
-    }
+    if (savedCart) { cart = JSON.parse(savedCart); updateCartUI(); }
+    if (savedWishlist) { wishlist = new Set(JSON.parse(savedWishlist)); }
 }
 
 function saveUserData() {
     localStorage.setItem('zaziza_cart', JSON.stringify(cart));
-    // Convert Set to Array for JSON storage
     localStorage.setItem('zaziza_wishlist', JSON.stringify([...wishlist]));
 }
 
-// Scroll Animations (Intersection Observer)
+// Scroll Reveal
 function setupScrollReveal() {
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.1
-    };
-
-    const observer = new IntersectionObserver((entries, observer) => {
+    const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('reveal-visible');
-                observer.unobserve(entry.target); // Only animate once
+                observer.unobserve(entry.target);
             }
         });
-    }, observerOptions);
-
-    // Observe elements with .reveal class
-    document.querySelectorAll('.reveal').forEach(el => {
-        observer.observe(el);
-    });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 }
 
 // Render Products
 function renderProducts(filter = 'all') {
     const grid = document.getElementById('productsGrid');
-    let filteredProducts = products;
+    let filtered = products;
+    if (filter !== 'all') filtered = products.filter(p => p.category === filter || p.badge.toLowerCase() === filter);
 
-    if (filter !== 'all') {
-        filteredProducts = products.filter(p => 
-            p.category === filter || 
-            p.badge.toLowerCase() === filter
-        );
-    }
-
-    grid.innerHTML = filteredProducts.map((product, index) => `
-        <div class="product-card reveal" style="transition-delay: ${index * 100}ms">
-            <div class="product-badge">${product.badge}</div>
+    grid.innerHTML = filtered.map((p, i) => `
+        <div class="product-card reveal" style="transition-delay: ${i * 50}ms">
+            <div class="product-badge">${p.badge}</div>
             <div class="product-image-container">
-                <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
+                <img src="${p.image}" alt="${p.name}" class="product-image" loading="lazy">
             </div>
             <div class="product-actions">
-                <button class="action-btn" onclick="toggleWishlistItem(${product.id})" title="Add to Wishlist">
-                    ${wishlist.has(product.id) ? '❤️' : '🤍'}
-                </button>
-                <button class="action-btn" onclick="quickView(${product.id})" title="Quick View">👁️</button>
+                <button class="action-btn" onclick="toggleWishlistItem(${p.id})">${wishlist.has(p.id) ? '❤️' : '🤍'}</button>
+                <button class="action-btn" onclick="quickView(${p.id})">👁️</button>
             </div>
             <div class="product-info">
-                <div class="product-category">${product.category}</div>
-                <div class="product-name">${product.name}</div>
-                <div class="product-description">${product.description}</div>
+                <div class="product-category">${p.category}</div>
+                <div class="product-name">${p.name}</div>
+                <div class="product-description">${p.description}</div>
                 <div class="product-footer">
-                    <div class="product-price">
-                        <span class="price-current">$${product.price}</span>
-                        <span class="price-original">$${product.originalPrice}</span>
-                    </div>
-                    <div class="product-rating">
-                        ${'⭐'.repeat(Math.floor(product.rating))} ${product.rating}
-                    </div>
+                    <div class="product-price"><span class="price-current">$${p.price}</span></div>
+                    <div class="product-rating">⭐ ${p.rating}</div>
                 </div>
-                <button class="add-to-cart-btn" onclick="addToCart(${product.id})">
-                    ADD TO CART
-                </button>
+                <button class="add-to-cart-btn" onclick="addToCart(${p.id})">ADD TO CART</button>
             </div>
         </div>
     `).join('');
-    
-    // Re-attach observer to new elements
     setupScrollReveal();
 }
 
-// Filter Products
-function filterProducts(category) {
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
+function filterProducts(cat) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     event.target.classList.add('active');
-    renderProducts(category);
+    renderProducts(cat);
 }
 
-// Cart Functions
-function addToCart(productId) {
-    const product = products.find(p => p.id === productId);
-    const existingItem = cart.find(item => item.id === productId);
-
-    if (existingItem) {
-        existingItem.quantity++;
-    } else {
-        cart.push({ ...product, quantity: 1 });
-    }
-
-    saveUserData();
-    updateCartUI();
-    showNotification(`${product.name} added to cart!`);
+// Cart Logic
+function addToCart(id) {
+    const p = products.find(x => x.id === id);
+    const item = cart.find(x => x.id === id);
+    if (item) item.quantity++; else cart.push({ ...p, quantity: 1 });
+    saveUserData(); updateCartUI(); showNotification(`${p.name} added!`);
 }
 
-function removeFromCart(productId) {
-    cart = cart.filter(item => item.id !== productId);
-    saveUserData();
-    updateCartUI();
-    renderCart();
+function removeFromCart(id) {
+    cart = cart.filter(x => x.id !== id);
+    saveUserData(); updateCartUI(); renderCart();
 }
 
 function updateCartUI() {
     const count = cart.reduce((sum, item) => sum + item.quantity, 0);
     const badge = document.getElementById('cartCount');
-    
     badge.textContent = count;
-    badge.style.animation = 'none';
-    void badge.offsetWidth; 
-    badge.style.animation = 'pulse 0.5s ease';
+    badge.style.animation = 'none'; void badge.offsetWidth; badge.style.animation = 'pulse 0.5s ease';
 }
 
 function renderCart() {
-    const cartItems = document.getElementById('cartItems');
-    const cartTotal = document.getElementById('cartTotal');
-
+    const list = document.getElementById('cartItems');
+    const totalEl = document.getElementById('cartTotal');
+    
     if (cart.length === 0) {
-        cartItems.innerHTML = `
-            <div class="empty-cart">
-                <div class="empty-cart-icon">🛒</div>
-                <p>Your cart is empty</p>
-            </div>
-        `;
-        cartTotal.textContent = '$0.00';
+        list.innerHTML = `<div class="empty-cart"><div class="empty-cart-icon">🛒</div><p>Cart is empty</p></div>`;
+        totalEl.textContent = '$0.00';
         return;
     }
 
-    cartItems.innerHTML = cart.map((item, index) => `
+    list.innerHTML = cart.map(item => `
         <div class="cart-item">
-            <img src="${item.image}" alt="${item.name}" class="cart-item-image">
+            <img src="${item.image}" class="cart-item-image">
             <div class="cart-item-info">
                 <div class="cart-item-name">${item.name}</div>
                 <div class="cart-item-price">$${item.price} × ${item.quantity}</div>
@@ -191,139 +132,190 @@ function renderCart() {
     `).join('');
 
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    cartTotal.textContent = `$${total.toFixed(2)}`;
+    totalEl.textContent = `$${total.toFixed(2)}`;
 }
 
-function openCart() {
-    renderCart();
-    document.getElementById('cartModal').classList.add('active');
-}
+function openCart() { renderCart(); document.getElementById('cartModal').classList.add('active'); }
+function closeCart() { document.getElementById('cartModal').classList.remove('active'); }
 
-function closeCart() {
-    document.getElementById('cartModal').classList.remove('active');
-}
+/* --- CHECKOUT SYSTEM --- */
 
-function checkout() {
-    if (cart.length === 0) {
-        showNotification('Your cart is empty!');
-        return;
-    }
-    showNotification('Processing checkout... (Demo)');
-    setTimeout(() => {
-        cart = [];
-        saveUserData();
-        updateCartUI();
-        closeCart();
-        showNotification('Order placed successfully! 🎉');
-    }, 2000);
-}
-
-// Wishlist Functions
-function toggleWishlistItem(productId) {
-    if (wishlist.has(productId)) {
-        wishlist.delete(productId);
-        showNotification('Removed from wishlist');
-    } else {
-        wishlist.add(productId);
-        showNotification('Added to wishlist ❤️');
-    }
-    saveUserData();
-    renderProducts();
-}
-
-function toggleWishlist() {
-    showNotification(`You have ${wishlist.size} items in your wishlist`);
-}
-
-// Search Functions
-function openSearch() {
-    document.getElementById('searchModal').classList.add('active');
-    document.querySelector('.search-input').focus();
-}
-
-function closeSearch() {
-    document.getElementById('searchModal').classList.remove('active');
-    document.getElementById('searchResults').innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">Start typing to search...</p>';
-}
-
-function searchProducts(query) {
-    const results = document.getElementById('searchResults');
+function startCheckout() {
+    if (cart.length === 0) return showNotification("Your cart is empty!");
+    closeCart();
     
-    if (query.length < 2) {
-        results.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">Start typing to search...</p>';
-        return;
-    }
-
-    const filtered = products.filter(p => 
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.description.toLowerCase().includes(query.toLowerCase()) ||
-        p.category.toLowerCase().includes(query.toLowerCase())
-    );
-
-    if (filtered.length === 0) {
-        results.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">No products found</p>';
-        return;
-    }
-
-    results.innerHTML = filtered.map(product => `
-        <div class="search-result-item" onclick="quickView(${product.id})">
-            <img src="${product.image}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px;">
-            <div style="flex: 1">
-                <div style="font-weight: 700;">${product.name}</div>
-                <div style="color: var(--primary);">$${product.price}</div>
+    // Reset State
+    checkoutState.step = 1;
+    checkoutState.shippingCost = 0;
+    
+    // Render Order Summary Sidebar
+    const summaryList = document.getElementById('checkoutItemsList');
+    summaryList.innerHTML = cart.map(item => `
+        <div class="checkout-item">
+            <img src="${item.image}" class="checkout-item-img">
+            <div class="checkout-item-details">
+                <div class="checkout-item-name">${item.name}</div>
+                <div class="checkout-item-qty">Qty: ${item.quantity}</div>
             </div>
+            <div class="checkout-item-price">$${item.price * item.quantity}</div>
         </div>
     `).join('');
-}
-
-function quickView(productId) {
-    const product = products.find(p => p.id === productId);
-    showNotification(`Quick view: ${product.name} (Demo feature)`);
-    closeSearch();
-}
-
-// Newsletter
-function subscribeNewsletter(e) {
-    e.preventDefault();
-    showNotification('Thank you for subscribing! 📧');
-    e.target.reset();
-}
-
-// Notification
-function showNotification(message) {
-    const notification = document.getElementById('notification');
-    const text = document.getElementById('notificationText');
-    text.textContent = message;
     
-    // Reset animation
-    notification.classList.remove('active');
-    void notification.offsetWidth; // Trigger reflow
-    notification.classList.add('active');
-
-    setTimeout(() => {
-        notification.classList.remove('active');
-    }, 3000);
+    updateCheckoutTotals();
+    showStep(1);
+    
+    // Open Overlay
+    document.getElementById('checkoutOverlay').classList.add('active');
 }
 
-// Scroll Effects
-window.addEventListener('scroll', () => {
-    const navbar = document.getElementById('navbar');
-    if (window.scrollY > 100) {
-        navbar.classList.add('scrolled');
-    } else {
-        navbar.classList.remove('scrolled');
+function closeCheckout() {
+    document.getElementById('checkoutOverlay').classList.remove('active');
+}
+
+function updateCheckoutTotals() {
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const total = subtotal + checkoutState.shippingCost;
+    
+    document.getElementById('checkoutSubtotal').textContent = `$${subtotal.toFixed(2)}`;
+    document.getElementById('checkoutShipping').textContent = checkoutState.shippingCost === 0 ? 'Free' : `$${checkoutState.shippingCost.toFixed(2)}`;
+    document.getElementById('checkoutTotal').textContent = `$${total.toFixed(2)}`;
+    document.getElementById('payAmount').textContent = `$${total.toFixed(2)}`;
+}
+
+function showStep(step) {
+    // Hide all steps
+    document.querySelectorAll('.checkout-step').forEach(el => el.classList.remove('active'));
+    document.getElementById(`step${step}`)?.classList.add('active');
+    
+    // Update Progress Bar
+    document.getElementById('step1-indicator').className = step >= 1 ? 'step active' : 'step';
+    document.getElementById('step2-indicator').className = step >= 2 ? 'step active' : 'step';
+    document.getElementById('step3-indicator').className = step >= 3 ? 'step active' : 'step';
+    
+    checkoutState.step = step;
+}
+
+function checkoutNextStep(targetStep) {
+    if (targetStep > checkoutState.step) {
+        if (!validateCurrentStep()) return;
     }
-});
-
-function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showStep(targetStep);
 }
 
-// Close modals on outside click
-document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.remove('active');
+function validateCurrentStep() {
+    const currentStepEl = document.getElementById(`step${checkoutState.step}`);
+    const inputs = currentStepEl.querySelectorAll('input[required]');
+    let isValid = true;
+    
+    inputs.forEach(input => {
+        if (!input.value.trim()) {
+            isValid = false;
+            input.classList.add('error');
+            setTimeout(() => input.classList.remove('error'), 500);
         }
     });
+    
+    if (checkoutState.step === 3) {
+        // Simple Card Validation logic
+        const cardNum = document.getElementById('cardNumber').value.replace(/\s/g, '');
+        if (cardNum.length < 13) isValid = false;
+    }
+
+    return isValid;
+}
+
+function updateShipping(cost) {
+    checkoutState.shippingCost = cost;
+    updateCheckoutTotals();
+}
+
+// Payment Visualizers
+function formatCardNumber(input) {
+    let value = input.value.replace(/\D/g, '');
+    let formattedValue = '';
+    
+    for (let i = 0; i < value.length; i++) {
+        if (i > 0 && i % 4 === 0) formattedValue += ' ';
+        formattedValue += value[i];
+    }
+    
+    input.value = formattedValue;
+    document.getElementById('displayCardNumber').textContent = formattedValue || '•••• •••• •••• ••••';
+    
+    // Detect Card Type
+    const logo = document.getElementById('cardLogo');
+    if (value.startsWith('4')) logo.textContent = 'VISA';
+    else if (value.startsWith('5')) logo.textContent = 'MASTERCARD';
+    else logo.textContent = 'CARD';
+}
+
+function formatExpiry(input) {
+    let value = input.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+    }
+    input.value = value;
+    document.getElementById('displayExpiry').textContent = value || 'MM/YY';
+}
+
+function updateCardName(name) {
+    document.getElementById('displayName').textContent = name || 'YOUR NAME';
+}
+
+async function processPayment() {
+    if (!validateCurrentStep()) return;
+    
+    const btn = document.getElementById('payButton');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'Processing...';
+    btn.disabled = true;
+    
+    // Simulate API Call
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    cart = [];
+    saveUserData();
+    updateCartUI();
+    
+    document.getElementById('orderId').textContent = '#' + Math.floor(Math.random() * 9000 + 1000);
+    showStep('Success');
+    
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+}
+
+// Wishlist & Search (Standard)
+function toggleWishlistItem(id) {
+    if (wishlist.has(id)) wishlist.delete(id); else wishlist.add(id);
+    saveUserData(); renderProducts(); showNotification(wishlist.has(id) ? 'Added to wishlist ❤️' : 'Removed from wishlist');
+}
+function toggleWishlist() { showNotification(`Wishlist: ${wishlist.size} items`); }
+
+function openSearch() { document.getElementById('searchModal').classList.add('active'); document.querySelector('.search-input').focus(); }
+function closeSearch() { document.getElementById('searchModal').classList.remove('active'); }
+function searchProducts(q) {
+    const res = document.getElementById('searchResults');
+    if (q.length < 2) return res.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--text-muted)">Type to search...</p>';
+    const found = products.filter(p => p.name.toLowerCase().includes(q.toLowerCase()));
+    if (!found.length) return res.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--text-muted)">No results.</p>';
+    res.innerHTML = found.map(p => `
+        <div class="search-result-item" onclick="quickView(${p.id})">
+            <img src="${p.image}" style="width:40px;height:40px;border-radius:5px;object-fit:cover">
+            <div><div style="font-weight:700">${p.name}</div><div style="color:var(--primary)">$${p.price}</div></div>
+        </div>`).join('');
+}
+function quickView(id) { const p = products.find(x => x.id === id); showNotification(`Quick view: ${p.name}`); closeSearch(); }
+
+function showNotification(msg) {
+    const n = document.getElementById('notification');
+    document.getElementById('notificationText').textContent = msg;
+    n.classList.remove('active'); void n.offsetWidth; n.classList.add('active');
+    setTimeout(() => n.classList.remove('active'), 3000);
+}
+
+window.addEventListener('scroll', () => {
+    const nav = document.getElementById('navbar');
+    if (window.scrollY > 100) nav.classList.add('scrolled'); else nav.classList.remove('scrolled');
 });
+function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); }));
