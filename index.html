@@ -52,31 +52,31 @@
     </section>
 
     <section class="categories" id="categories">
-        <div class="section-header reveal">
+        <div class="section-header">
             <div class="section-label">CATEGORIES</div>
             <h2 class="section-title">Shop by Style</h2>
             <p class="section-description">Discover our carefully curated collections designed for every occasion and every mood.</p>
         </div>
         <div class="categories-grid">
-            <div class="category-card reveal" onclick="filterProducts('women')">
+            <div class="category-card" onclick="filterProducts('women')">
                 <div class="category-content">
                     <h3 class="category-title">Women's Wear</h3>
                     <p class="category-count">250+ Products</p>
                 </div>
             </div>
-            <div class="category-card reveal" style="transition-delay: 100ms" onclick="filterProducts('men')">
+            <div class="category-card" onclick="filterProducts('men')">
                 <div class="category-content">
                     <h3 class="category-title">Men's Collection</h3>
                     <p class="category-count">180+ Products</p>
                 </div>
             </div>
-            <div class="category-card reveal" style="transition-delay: 200ms" onclick="filterProducts('accessories')">
+            <div class="category-card" onclick="filterProducts('accessories')">
                 <div class="category-content">
                     <h3 class="category-title">Accessories</h3>
                     <p class="category-count">120+ Products</p>
                 </div>
             </div>
-            <div class="category-card reveal" style="transition-delay: 300ms" onclick="filterProducts('sale')">
+            <div class="category-card" onclick="filterProducts('sale')">
                 <div class="category-content">
                     <h3 class="category-title">Sale Items</h3>
                     <p class="category-count">90+ Products</p>
@@ -86,13 +86,13 @@
     </section>
 
     <section class="products" id="products">
-        <div class="section-header reveal">
+        <div class="section-header">
             <div class="section-label">PRODUCTS</div>
             <h2 class="section-title">Featured Collection</h2>
             <p class="section-description">Handpicked items that define the season's trends.</p>
         </div>
 
-        <div class="filters reveal">
+        <div class="filters">
             <button class="filter-btn active" onclick="filterProducts('all')">All Products</button>
             <button class="filter-btn" onclick="filterProducts('new')">New Arrivals</button>
             <button class="filter-btn" onclick="filterProducts('trending')">Trending</button>
@@ -105,28 +105,28 @@
 
     <section class="features" id="features">
         <div class="features-container">
-            <div class="section-header reveal">
+            <div class="section-header">
                 <div class="section-label">WHY ZAZIZA</div>
                 <h2 class="section-title">The Zaziza Experience</h2>
                 <p class="section-description">We're committed to providing you with an exceptional shopping journey.</p>
             </div>
             <div class="features-grid">
-                <div class="feature reveal">
+                <div class="feature">
                     <div class="feature-icon">🚚</div>
                     <h3>Free Shipping</h3>
                     <p>Complimentary worldwide shipping on all orders over $150. Your style, delivered to your doorstep.</p>
                 </div>
-                <div class="feature reveal" style="transition-delay: 100ms">
+                <div class="feature">
                     <div class="feature-icon">↩️</div>
                     <h3>Easy Returns</h3>
                     <p>Not satisfied? Return within 30 days for a full refund. No questions asked, hassle-free process.</p>
                 </div>
-                <div class="feature reveal" style="transition-delay: 200ms">
+                <div class="feature">
                     <div class="feature-icon">🔒</div>
                     <h3>Secure Checkout</h3>
                     <p>Shop with confidence using our encrypted payment gateway. Your data is always protected.</p>
                 </div>
-                <div class="feature reveal" style="transition-delay: 300ms">
+                <div class="feature">
                     <div class="feature-icon">⭐</div>
                     <h3>Premium Quality</h3>
                     <p>Every item is meticulously inspected to ensure authenticity and superior craftsmanship.</p>
@@ -136,7 +136,7 @@
     </section>
 
     <section class="newsletter" id="newsletter">
-        <div class="newsletter-content reveal">
+        <div class="newsletter-content">
             <h2>Join the Zaziza Community</h2>
             <p>Subscribe to get exclusive offers, style tips, and early access to new collections.</p>
             <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
@@ -306,7 +306,6 @@
                     <div class="form-group floating-label">
                         <input type="text" id="cardNumber" maxlength="19" required placeholder=" " class="form-input" oninput="formatCardNumber(this)">
                         <label for="cardNumber">Card Number</label>
-                        <div class="input-icon">🔒</div>
                     </div>
                     <div class="form-row">
                         <div class="form-group floating-label half">
