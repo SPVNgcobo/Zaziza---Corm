@@ -1,6 +1,6 @@
 const { useState, useEffect, useMemo } = React;
 
-// --- 1. DATA (Embedded for stability) ---
+// --- MOCK DATA ---
 const PRODUCTS = [
     { id: 1, name: "Silk Evening Dress", category: "women", price: 459, image: "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=800&q=80", desc: "Crafted from 100% mulberry silk, this evening gown features a bias cut that drapes effortlessly." },
     { id: 2, name: "Obsidian Leather Jacket", category: "men", price: 299, image: "https://images.unsplash.com/photo-1551028919-383718bccf3b?auto=format&fit=crop&w=800&q=80", desc: "Full-grain Italian leather with gunmetal hardware. A timeless staple for the modern rebel." },
@@ -14,7 +14,7 @@ const PRODUCTS = [
 
 const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
-// --- 2. ICONS (SVG for sharpness) ---
+// --- ICONS (SVG) ---
 const Icon = ({ name }) => {
     if (name === 'cart') return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>;
     if (name === 'search') return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
@@ -22,7 +22,7 @@ const Icon = ({ name }) => {
     return null;
 };
 
-// --- 3. UI COMPONENTS ---
+// --- COMPONENTS ---
 
 const Navbar = ({ cartCount, onCartClick, onNav }) => (
     <nav>
@@ -87,7 +87,7 @@ const Footer = () => (
     </footer>
 );
 
-// --- 4. VIEWS ---
+// --- VIEWS ---
 
 const HomeView = ({ products, onProductClick, onNav }) => (
     <>
