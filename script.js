@@ -400,11 +400,11 @@ const App = () => {
     useScrollReveal();
     const [cart, setCart] = usePersistedState('zaziza_cart', []);
     const [wishlist, setWishlist] = usePersistedState('zaziza_wishlist', []);
-    const [user, setUser] = usePersistedState('zaziza_user', null); // User State
+    const [user, setUser] = usePersistedState('zaziza_user', null);
     const [filter, setFilter] = useState('all');
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-    const [isAuthOpen, setIsAuthOpen] = useState(false); // Auth Modal State
+    const [isAuthOpen, setIsAuthOpen] = useState(false);
     const [notification, setNotification] = useState(null);
 
     const notify = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
@@ -426,15 +426,8 @@ const App = () => {
         notify(isWished ? "Removed from wishlist" : "Added to wishlist");
     };
 
-    const handleLogin = (userData) => {
-        setUser(userData);
-        notify(`Welcome back, ${userData.name}!`);
-    };
-
-    const handleLogout = () => {
-        setUser(null);
-        notify("Signed out successfully");
-    };
+    const handleLogin = (userData) => { setUser(userData); notify(`Welcome back, ${userData.name}!`); };
+    const handleLogout = () => { setUser(null); notify("Signed out successfully"); };
 
     const filteredProducts = useMemo(() => {
         if (filter === 'all') return PRODUCTS_DATA;
@@ -510,7 +503,59 @@ const App = () => {
                 </div>
             </section>
             
-            <footer><div className="footer-bottom"><p>© 2026 Zaziza. Principal Engineer Build.</p></div></footer>
+            {/* --- PROFESSIONAL FOOTER UPGRADE --- */}
+            <footer>
+                <div className="footer-content">
+                    <div className="footer-section">
+                        <h3>ZAZIZA</h3>
+                        <p style={{color: 'var(--text-muted)', lineHeight: 1.8, fontSize: '0.95rem'}}>
+                            Redefining modern fashion with curated pieces that blend contemporary aesthetics with timeless elegance. Designed for the bold.
+                        </p>
+                        <div className="social-icons">
+                            <div className="social-icon">📘</div>
+                            <div className="social-icon">📷</div>
+                            <div className="social-icon">🐦</div>
+                            <div className="social-icon">📌</div>
+                        </div>
+                    </div>
+                    <div className="footer-section">
+                        <h3>Shop</h3>
+                        <ul className="footer-links">
+                            <li><a href="#">New Arrivals</a></li>
+                            <li><a href="#">Best Sellers</a></li>
+                            <li><a href="#">Accessories</a></li>
+                            <li><a href="#">Sale</a></li>
+                        </ul>
+                    </div>
+                    <div className="footer-section">
+                        <h3>Support</h3>
+                        <ul className="footer-links">
+                            <li><a href="#">Help Center</a></li>
+                            <li><a href="#">Shipping & Returns</a></li>
+                            <li><a href="#">Size Guide</a></li>
+                            <li><a href="#">Contact Us</a></li>
+                        </ul>
+                    </div>
+                    <div className="footer-section">
+                        <h3>Legal</h3>
+                        <ul className="footer-links">
+                            <li><a href="#">Privacy Policy</a></li>
+                            <li><a href="#">Terms of Service</a></li>
+                            <li><a href="#">Cookie Policy</a></li>
+                            <li><a href="#">Sustainability</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div className="footer-bottom">
+                    <p>&copy; 2026 Zaziza. All rights reserved.</p>
+                    <div className="payment-methods">
+                        <div className="payment-icon">💳</div>
+                        <div className="payment-icon">🅿️</div>
+                        <div className="payment-icon">Ⓜ️</div>
+                        <div className="payment-icon">🅰️</div>
+                    </div>
+                </div>
+            </footer>
 
             {/* Cart Modal */}
             <div className={`modal ${isCartOpen ? 'active' : ''}`} onClick={(e) => e.target.classList.contains('modal') && setIsCartOpen(false)}>
@@ -522,7 +567,10 @@ const App = () => {
                             cart.map(item => (
                                 <div key={item.id} className="cart-item">
                                     <img src={item.image} className="cart-item-image" />
-                                    <div className="cart-item-info"><div className="cart-item-name">{item.name}</div><div className="cart-item-price">${item.price} × {item.quantity}</div></div>
+                                    <div className="cart-item-info">
+                                        <div className="cart-item-name">{item.name}</div>
+                                        <div className="cart-item-price">${item.price} × {item.quantity}</div>
+                                    </div>
                                     <button className="cart-item-remove" onClick={() => removeFromCart(item.id)}>Remove</button>
                                 </div>
                             ))
@@ -533,14 +581,8 @@ const App = () => {
                 </div>
             </div>
 
-            {/* NEW: Auth Modal */}
-            <AuthModal 
-                isOpen={isAuthOpen} 
-                onClose={() => setIsAuthOpen(false)} 
-                onLogin={handleLogin} 
-            />
-
-            {/* Checkout Overlay */}
+            <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onLogin={handleLogin} />
+            
             <CheckoutOverlay 
                 isOpen={isCheckoutOpen} 
                 onClose={() => setIsCheckoutOpen(false)} 
@@ -553,6 +595,3 @@ const App = () => {
         </React.Fragment>
     );
 };
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
