@@ -99,19 +99,125 @@ nav { position: fixed; top: 0; width: 100%; z-index: 1000; background: rgba(11, 
 .detail-desc { color: var(--text-muted); font-size: 1.1rem; line-height: 1.8; margin-bottom: 2rem; }
 
 /* =========================================
-   8. FOOTER (Fixed Grid)
+   8. FEATURES & CONTACT (UPDATED)
    ========================================= */
-footer { background: rgba(0,0,0,0.5); padding: 5rem 2rem 2rem; border-top: 1px solid var(--glass-border); margin-top: 6rem; }
-.footer-content { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 4rem; margin-bottom: 4rem; }
-.footer-col h3 { color: white; margin-bottom: 1.5rem; font-size: 1.2rem; }
-.footer-col p { color: var(--text-muted); line-height: 1.6; max-width: 300px; }
-.footer-links { list-style: none; }
-.footer-links li { margin-bottom: 0.8rem; }
-.footer-links a { color: var(--text-muted); text-decoration: none; transition: 0.3s; }
-.footer-links a:hover { color: var(--primary); }
-.social-icons { display: flex; gap: 1rem; margin-top: 1.5rem; }
-.social-icon { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; color: white; transition: 0.3s; }
-.social-icon:hover { background: var(--primary); border-color: var(--primary); }
+.features { padding: 6rem 2rem; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+.features-container { max-width: 1400px; margin: 0 auto; }
+.section-header { text-align: center; margin-bottom: 4rem; }
+.section-label { color: var(--primary); font-size: 0.9rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.5rem; }
+.section-title { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; }
+.section-description { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 3rem; margin-top: 4rem; }
+.feature { text-align: center; padding: 2.5rem; background: rgba(255, 255, 255, 0.03); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease; }
+.feature:hover { background: rgba(255, 107, 53, 0.05); border-color: rgba(255, 107, 53, 0.2); transform: translateY(-5px); }
+.feature-icon { font-size: 3.5rem; margin-bottom: 1.5rem; display: inline-block; transition: all 0.3s ease; }
+.feature:hover .feature-icon { transform: scale(1.1); }
+.feature h3 { font-size: 1.5rem; margin-bottom: 1rem; font-weight: 700; }
+.feature p { color: var(--text-muted); line-height: 1.6; }
+
+/* --- CENTERED CONTACT SECTION --- */
+.contact-section { 
+    padding: 6rem 2rem; 
+    max-width: 1000px; /* Constrain width for centering */
+    margin: 0 auto; 
+}
+
+.contact-container { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 4rem; 
+}
+
+/* 1. Contact Details Row */
+.contact-info { 
+    display: flex; 
+    justify-content: center; 
+    gap: 2rem; 
+    width: 100%; 
+    flex-wrap: wrap; 
+}
+
+.contact-card { 
+    background: rgba(255, 255, 255, 0.03); 
+    border: 1px solid var(--glass-border); 
+    padding: 2rem; 
+    border-radius: 16px; 
+    transition: transform 0.3s ease; 
+    flex: 1; 
+    min-width: 250px; 
+    text-align: center; /* Center text inside cards */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.contact-card:hover { 
+    transform: translateY(-5px); 
+    background: var(--input-bg); 
+    border-color: var(--primary);
+}
+
+.contact-icon { 
+    color: var(--primary); 
+    margin-bottom: 1rem; 
+    /* Icon alignment fixes */
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 107, 53, 0.1);
+    border-radius: 50%;
+}
+
+.contact-card h3 { 
+    font-size: 1.2rem; 
+    margin-bottom: 0.8rem; 
+    font-weight: 700; 
+}
+
+.contact-card p { 
+    color: var(--text-muted); 
+    font-size: 0.95rem; 
+    line-height: 1.6; 
+}
+
+/* 2. Centered Form */
+.contact-form-wrapper { 
+    background: var(--dark-light); 
+    border: 1px solid var(--glass-border); 
+    padding: 3rem; 
+    border-radius: 24px; 
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+    width: 100%; 
+    max-width: 700px; /* Optimal reading width for forms */
+}
+
+.success-message { 
+    text-align: center; 
+    padding: 2rem; 
+    animation: fadeIn 0.5s ease; 
+}
+
+.success-message h3 { 
+    font-size: 2rem; 
+    margin-bottom: 1rem; 
+    margin-top: 1rem; 
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .contact-info { 
+        flex-direction: column; 
+    }
+    .contact-form-wrapper { 
+        padding: 2rem; 
+    }
+    .section-title {
+        font-size: 2.5rem;
+    }
+}
 
 /* =========================================
    9. RESPONSIVE
