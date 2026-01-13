@@ -1,19 +1,80 @@
-// Product Data
-const products = [
-    { id: 1, name: 'Silk Evening Dress', category: 'women', price: 459, originalPrice: 599, rating: 4.8, description: 'Elegant flowing silk dress', badge: 'NEW', image: 1 },
-    { id: 2, name: 'Premium Leather Jacket', category: 'men', price: 299, originalPrice: 399, rating: 4.9, description: 'Classic leather bomber jacket', badge: 'SALE', image: 2 },
-    { id: 3, name: 'Designer Sneakers', category: 'accessories', price: 189, originalPrice: 249, rating: 4.7, description: 'Limited edition streetwear', badge: 'TRENDING', image: 3 },
-    { id: 4, name: 'Luxury Timepiece', category: 'accessories', price: 799, originalPrice: 999, rating: 5.0, description: 'Swiss automatic movement', badge: 'EXCLUSIVE', image: 4 },
-    { id: 5, name: 'Cashmere Sweater', category: 'women', price: 229, originalPrice: 329, rating: 4.6, description: 'Ultra-soft Italian cashmere', badge: 'NEW', image: 1 },
-    { id: 6, name: 'Tailored Suit', category: 'men', price: 699, originalPrice: 899, rating: 4.9, description: 'Bespoke wool blend suit', badge: 'PREMIUM', image: 2 },
-    { id: 7, name: 'Statement Handbag', category: 'accessories', price: 399, originalPrice: 549, rating: 4.8, description: 'Genuine leather crossbody', badge: 'SALE', image: 3 },
-    { id: 8, name: 'Athletic Set', category: 'women', price: 149, originalPrice: 199, rating: 4.5, description: 'Performance activewear', badge: 'TRENDING', image: 4 }
-];
-
+let products = [];
 let cart = [];
 let wishlist = new Set();
 
-// Generate Products
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    loadProducts();
+    loadUserData();
+    setupScrollReveal();
+});
+
+// Load Products from JSON (Simulating Nexus API)
+async function loadProducts() {
+    try {
+        const response = await fetch('products.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        products = await response.json();
+        renderProducts();
+    } catch (e) {
+        console.error("Could not load products. Ensure you are running on a local server.", e);
+        document.getElementById('productsGrid').innerHTML = `
+            <div style="text-align:center; padding: 2rem; color: var(--text-muted);">
+                <p>⚠️ Unable to load product data.</p>
+                <p style="font-size: 0.9rem">Please open this folder with a local server (e.g., Live Server in VS Code) to allow JSON fetching.</p>
+            </div>
+        `;
+    }
+}
+
+// Data Persistence (LocalStorage)
+function loadUserData() {
+    const savedCart = localStorage.getItem('zaziza_cart');
+    const savedWishlist = localStorage.getItem('zaziza_wishlist');
+
+    if (savedCart) {
+        cart = JSON.parse(savedCart);
+        updateCartUI();
+    }
+
+    if (savedWishlist) {
+        // Convert array back to Set
+        wishlist = new Set(JSON.parse(savedWishlist));
+    }
+}
+
+function saveUserData() {
+    localStorage.setItem('zaziza_cart', JSON.stringify(cart));
+    // Convert Set to Array for JSON storage
+    localStorage.setItem('zaziza_wishlist', JSON.stringify([...wishlist]));
+}
+
+// Scroll Animations (Intersection Observer)
+function setupScrollReveal() {
+    const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('reveal-visible');
+                observer.unobserve(entry.target); // Only animate once
+            }
+        });
+    }, observerOptions);
+
+    // Observe elements with .reveal class
+    document.querySelectorAll('.reveal').forEach(el => {
+        observer.observe(el);
+    });
+}
+
+// Render Products
 function renderProducts(filter = 'all') {
     const grid = document.getElementById('productsGrid');
     let filteredProducts = products;
@@ -25,17 +86,12 @@ function renderProducts(filter = 'all') {
         );
     }
 
-    const colors = [
-        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
-    ];
-
     grid.innerHTML = filteredProducts.map((product, index) => `
-        <div class="product-card">
+        <div class="product-card reveal" style="transition-delay: ${index * 100}ms">
             <div class="product-badge">${product.badge}</div>
-            <div class="product-image" style="background: ${colors[index % 4]}"></div>
+            <div class="product-image-container">
+                <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
+            </div>
             <div class="product-actions">
                 <button class="action-btn" onclick="toggleWishlistItem(${product.id})" title="Add to Wishlist">
                     ${wishlist.has(product.id) ? '❤️' : '🤍'}
@@ -48,8 +104,8 @@ function renderProducts(filter = 'all') {
                 <div class="product-description">${product.description}</div>
                 <div class="product-footer">
                     <div class="product-price">
-                        <span class="price-current">${product.price}</span>
-                        <span class="price-original">${product.originalPrice}</span>
+                        <span class="price-current">$${product.price}</span>
+                        <span class="price-original">$${product.originalPrice}</span>
                     </div>
                     <div class="product-rating">
                         ${'⭐'.repeat(Math.floor(product.rating))} ${product.rating}
@@ -61,6 +117,9 @@ function renderProducts(filter = 'all') {
             </div>
         </div>
     `).join('');
+    
+    // Re-attach observer to new elements
+    setupScrollReveal();
 }
 
 // Filter Products
@@ -83,12 +142,14 @@ function addToCart(productId) {
         cart.push({ ...product, quantity: 1 });
     }
 
+    saveUserData();
     updateCartUI();
     showNotification(`${product.name} added to cart!`);
 }
 
 function removeFromCart(productId) {
     cart = cart.filter(item => item.id !== productId);
+    saveUserData();
     updateCartUI();
     renderCart();
 }
@@ -99,10 +160,7 @@ function updateCartUI() {
     
     badge.textContent = count;
     badge.style.animation = 'none';
-    
-    // Trigger reflow to restart animation
     void badge.offsetWidth; 
-    
     badge.style.animation = 'pulse 0.5s ease';
 }
 
@@ -121,26 +179,19 @@ function renderCart() {
         return;
     }
 
-    const colors = [
-        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
-    ];
-
     cartItems.innerHTML = cart.map((item, index) => `
         <div class="cart-item">
-            <div class="cart-item-image" style="background: ${colors[index % 4]}"></div>
+            <img src="${item.image}" alt="${item.name}" class="cart-item-image">
             <div class="cart-item-info">
                 <div class="cart-item-name">${item.name}</div>
-                <div class="cart-item-price">${item.price} × ${item.quantity}</div>
+                <div class="cart-item-price">$${item.price} × ${item.quantity}</div>
             </div>
             <button class="cart-item-remove" onclick="removeFromCart(${item.id})">Remove</button>
         </div>
     `).join('');
 
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    cartTotal.textContent = `${total.toFixed(2)}`;
+    cartTotal.textContent = `$${total.toFixed(2)}`;
 }
 
 function openCart() {
@@ -160,6 +211,7 @@ function checkout() {
     showNotification('Processing checkout... (Demo)');
     setTimeout(() => {
         cart = [];
+        saveUserData();
         updateCartUI();
         closeCart();
         showNotification('Order placed successfully! 🎉');
@@ -175,6 +227,7 @@ function toggleWishlistItem(productId) {
         wishlist.add(productId);
         showNotification('Added to wishlist ❤️');
     }
+    saveUserData();
     renderProducts();
 }
 
@@ -214,8 +267,11 @@ function searchProducts(query) {
 
     results.innerHTML = filtered.map(product => `
         <div class="search-result-item" onclick="quickView(${product.id})">
-            <div style="font-weight: 700;">${product.name}</div>
-            <div style="color: var(--primary);">${product.price}</div>
+            <img src="${product.image}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px;">
+            <div style="flex: 1">
+                <div style="font-weight: 700;">${product.name}</div>
+                <div style="color: var(--primary);">$${product.price}</div>
+            </div>
         </div>
     `).join('');
 }
@@ -229,7 +285,6 @@ function quickView(productId) {
 // Newsletter
 function subscribeNewsletter(e) {
     e.preventDefault();
-    const email = e.target.querySelector('input').value;
     showNotification('Thank you for subscribing! 📧');
     e.target.reset();
 }
@@ -239,6 +294,10 @@ function showNotification(message) {
     const notification = document.getElementById('notification');
     const text = document.getElementById('notificationText');
     text.textContent = message;
+    
+    // Reset animation
+    notification.classList.remove('active');
+    void notification.offsetWidth; // Trigger reflow
     notification.classList.add('active');
 
     setTimeout(() => {
@@ -260,17 +319,6 @@ function scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Smooth scroll for anchor links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    });
-});
-
 // Close modals on outside click
 document.querySelectorAll('.modal').forEach(modal => {
     modal.addEventListener('click', (e) => {
@@ -279,6 +327,3 @@ document.querySelectorAll('.modal').forEach(modal => {
         }
     });
 });
-
-// Initialize
-renderProducts();
