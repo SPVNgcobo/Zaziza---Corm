@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zaziza - Redefine Your Style</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <nav id="navbar">
+        <div class="nav-content">
+            <div class="logo" onclick="scrollToTop()">ZAZIZA</div>
+            <ul class="nav-links">
+                <li><a href="#categories">SHOP</a></li>
+                <li><a href="#products">NEW IN</a></li>
+                <li><a href="#features">ABOUT</a></li>
+                <li><a href="#newsletter">CONTACT</a></li>
+            </ul>
+            <div class="nav-icons">
+                <button class="nav-icon-btn" onclick="openSearch()">🔍</button>
+                <button class="nav-icon-btn" onclick="toggleWishlist()">❤️</button>
+                <button class="nav-icon-btn" onclick="openCart()" style="position: relative;">
+                    🛒
+                    <span class="cart-badge" id="cartCount">0</span>
+                </button>
+                <button class="nav-icon-btn">👤</button>
+                <button class="mobile-menu-btn">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-bg-shapes">
+            <div class="shape shape1"></div>
+            <div class="shape shape2"></div>
+            <div class="shape shape3"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">✨ NEW COLLECTION 2026</div>
+            <h1>REDEFINE YOUR STYLE</h1>
+            <p>Experience fashion that speaks volumes. Curated pieces that blend contemporary aesthetics with timeless elegance.</p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary" onclick="document.querySelector('#products').scrollIntoView({behavior: 'smooth'})">
+                    EXPLORE COLLECTION
+                </button>
+                <button class="btn btn-secondary" onclick="document.querySelector('#categories').scrollIntoView({behavior: 'smooth'})">
+                    BROWSE CATEGORIES
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section class="categories" id="categories">
+        <div class="section-header">
+            <div class="section-label">CATEGORIES</div>
+            <h2 class="section-title">Shop by Style</h2>
+            <p class="section-description">Discover our carefully curated collections designed for every occasion and every mood.</p>
+        </div>
+        <div class="categories-grid">
+            <div class="category-card" onclick="filterProducts('women')">
+                <div class="category-content">
+                    <h3 class="category-title">Women's Wear</h3>
+                    <p class="category-count">250+ Products</p>
+                </div>
+            </div>
+            <div class="category-card" onclick="filterProducts('men')">
+                <div class="category-content">
+                    <h3 class="category-title">Men's Collection</h3>
+                    <p class="category-count">180+ Products</p>
+                </div>
+            </div>
+            <div class="category-card" onclick="filterProducts('accessories')">
+                <div class="category-content">
+                    <h3 class="category-title">Accessories</h3>
+                    <p class="category-count">120+ Products</p>
+                </div>
+            </div>
+            <div class="category-card" onclick="filterProducts('sale')">
+                <div class="category-content">
+                    <h3 class="category-title">Sale Items</h3>
+                    <p class="category-count">90+ Products</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="products" id="products">
+        <div class="section-header">
+            <div class="section-label">PRODUCTS</div>
+            <h2 class="section-title">Featured Collection</h2>
+            <p class="section-description">Handpicked items that define the season's trends.</p>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterProducts('all')">All Products</button>
+            <button class="filter-btn" onclick="filterProducts('new')">New Arrivals</button>
+            <button class="filter-btn" onclick="filterProducts('trending')">Trending</button>
+            <button class="filter-btn" onclick="filterProducts('sale')">On Sale</button>
+        </div>
+
+        <div class="products-grid" id="productsGrid">
+            </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="features-container">
+            <div class="section-header">
+                <div class="section-label">WHY ZAZIZA</div>
+                <h2 class="section-title">The Zaziza Experience</h2>
+                <p class="section-description">We're committed to providing you with an exceptional shopping journey.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature">
+                    <div class="feature-icon">🚚</div>
+                    <h3>Free Shipping</h3>
+                    <p>Complimentary worldwide shipping on all orders over $150. Your style, delivered to your doorstep.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">↩️</div>
+                    <h3>Easy Returns</h3>
+                    <p>Not satisfied? Return within 30 days for a full refund. No questions asked, hassle-free process.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Secure Checkout</h3>
+                    <p>Shop with confidence using our encrypted payment gateway. Your data is always protected.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⭐</div>
+                    <h3>Premium Quality</h3>
+                    <p>Every item is meticulously inspected to ensure authenticity and superior craftsmanship.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="newsletter" id="newsletter">
+        <div class="newsletter-content">
+            <h2>Join the Zaziza Community</h2>
+            <p>Subscribe to get exclusive offers, style tips, and early access to new collections.</p>
+            <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
+                <input type="email" class="newsletter-input" placeholder="Enter your email address" required>
+                <button type="submit" class="btn btn-primary">SUBSCRIBE</button>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>ZAZIZA</h3>
+                <p style="color: var(--text-muted); line-height: 1.8;">Redefining modern fashion with curated collections that blend style, quality, and sustainability.</p>
+                <div class="social-icons">
+                    <div class="social-icon">📘</div>
+                    <div class="social-icon">📷</div>
+                    <div class="social-icon">🐦</div>
+                    <div class="social-icon">📌</div>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Shop</h3>
+                <ul class="footer-links">
+                    <li><a href="#">Women's Clothing</a></li>
+                    <li><a href="#">Men's Clothing</a></li>
+                    <li><a href="#">Accessories</a></li>
+                    <li><a href="#">New Arrivals</a></li>
+                    <li><a href="#">Sale</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Support</h3>
+                <ul class="footer-links">
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Shipping Info</a></li>
+                    <li><a href="#">Returns</a></li>
+                    <li><a href="#">Size Guide</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Company</h3>
+                <ul class="footer-links">
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Sustainability</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Zaziza. All rights reserved. Crafted with passion.</p>
+            <div class="payment-methods">
+                <div class="payment-icon">💳</div>
+                <div class="payment-icon">🅿️</div>
+                <div class="payment-icon">Ⓜ️</div>
+                <div class="payment-icon">🅰️</div>
+            </div>
+        </div>
+    </footer>
+
+    <div class="modal" id="cartModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeCart()">×</button>
+            <h2>Shopping Cart</h2>
+            <div class="cart-items" id="cartItems">
+                </div>
+            <div class="cart-total">
+                <span>Total:</span>
+                <span class="cart-total-price" id="cartTotal">$0.00</span>
+            </div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="checkout()">PROCEED TO CHECKOUT</button>
+        </div>
+    </div>
+
+    <div class="modal search-modal" id="searchModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeSearch()">×</button>
+            <h2>Search Products</h2>
+            <input type="text" class="search-input" placeholder="What are you looking for?" oninput="searchProducts(this.value)">
+            <div class="search-results" id="searchResults">
+                <p style="text-align: center; color: var(--text-muted); padding: 2rem;">Start typing to search...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <span id="notificationText"></span>
+    </div>
+</body>
+</html>
